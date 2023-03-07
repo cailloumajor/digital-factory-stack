@@ -1,0 +1,5 @@
+# docker-compose.yml is generated
+/docker-compose.yml
+
+# config.toml contains sensitive data
+/stack-config.toml
