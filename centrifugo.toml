@@ -1,0 +1,13 @@
+allow_anonymous_connect_without_token = true
+granular_proxy_mode = true
+health = true
+# Enable SSE (EventSource) fallback endpoint
+sse = true
+
+[[proxies]]
+name = "opcua_subscribe"
+endpoint = "http://centrifugo-change-stream:8080/centrifugo/subscribe"
+
+[[namespaces]]
+name = "opcua.data"
+subscribe_proxy_name = "opcua_subscribe"

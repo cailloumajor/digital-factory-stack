@@ -1,1 +1,197 @@
 version: "3"
+
+services:
+
+  docker-socket-proxy:
+    image: ghcr.io/tecnativa/docker-socket-proxy:0.1.1
+    environment:
+      - CONTAINERS=1
+    healthcheck:
+      test: nc -zv 127.0.0.1 2375 || exit 1
+    labels:
+      dozzle.enable: true
+    networks:
+      - net-private
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  reverse-proxy:
+    image: traefik:v2.9.9
+    depends_on:
+      - docker-socket-proxy
+    healthcheck:
+      test: traefik healthcheck
+    labels:
+      dozzle.enable: true
+    networks:
+      - default
+      - net-private
+    ports:
+      - 80:80
+    restart: unless-stopped
+    user: 65534:65534
+    volumes:
+      - ./traefik.toml:/etc/traefik/traefik.toml:ro
+
+  log-viewer:
+    image: amir20/dozzle:v4.9.1
+    depends_on:
+      - docker-socket-proxy
+    environment:
+      - DOCKER_HOST=tcp://docker-socket-proxy:2375
+      - DOZZLE_BASE=/logs
+      - DOZZLE_FILTER=label=dozzle.enable=true
+      - DOZZLE_NO_ANALYTICS=true
+    labels:
+      traefik.enable: true
+      traefik.http.routers.logging.rule: PathPrefix(`/logs/`) || Path(`/logs`)
+    networks:
+      - net-private
+    restart: unless-stopped
+    # Image does not contain `/etc/passwd`, so use numeric UID & GID
+    user: 65534:65534
+
+  centrifugo:
+    image: centrifugo/centrifugo:v4.1.2
+    command:
+      - centrifugo
+      - --config
+      - /usr/local/etc/centrifugo.toml
+    environment:
+      # Following environment variables will be taken from env file
+      - CENTRIFUGO_ALLOWED_ORIGINS
+      - CENTRIFUGO_API_KEY
+      - CENTRIFUGO_TOKEN_HMAC_SECRET_KEY
+    expose:
+      - 8000
+    healthcheck:
+      test: wget --spider http://127.0.0.1:8000/health || exit 1
+    labels:
+      dozzle.enable: true
+      traefik.enable: true
+      traefik.http.middlewares.centrifugo-stripprefix.stripprefix.prefixes: /centrifugo
+      traefik.http.middlewares.centrifugo-stripprefix.stripprefix.forceslash: false
+      traefik.http.routers.centrifugo.middlewares: centrifugo-stripprefix@docker
+      traefik.http.routers.centrifugo.rule: PathPrefix(`/centrifugo/`)
+    networks:
+      - net-private
+    restart: unless-stopped
+    user: 65534:65534
+    volumes:
+      - ./centrifugo.toml:/usr/local/etc/centrifugo.toml:ro
+
+  influxdb:
+    image: influxdb:2.6.1
+    environment:
+      - INFLUXD_REPORTING_DISABLED=true
+    healthcheck:
+      test: influx ping || exit 1
+      interval: 20s
+      start_period: 1m
+    labels:
+      dozzle.enable: true
+      traefik.enable: true
+      traefik.http.middlewares.influxdb-stripprefix.stripprefix.prefixes: /influxdb
+      traefik.http.middlewares.influxdb-stripprefix.stripprefix.forceslash: false
+      traefik.http.routers.influxdb.middlewares: influxdb-stripprefix@docker
+      traefik.http.routers.influxdb.rule: PathPrefix(`/influxdb/`)
+    networks:
+      - net-private
+    restart: unless-stopped
+    volumes:
+      - ${INFLUXDB_DATA_HOST_PATH}:/var/lib/influxdb2
+
+  mongodb:
+    image: mongo:6.0.5
+    command: --replSet=dummy
+    healthcheck:
+      test: "mongosh --quiet --norc --eval 'quit(db.runCommand({ ping: 1 }).ok ? 0 : 1)'"
+    labels:
+      dozzle.enable: true
+    networks:
+      - net-private
+    restart: unless-stopped
+    volumes:
+      - ${MONGODB_DATA_HOST_PATH}:/data/db
+
+  centrifugo-change-stream:
+    image: ghcr.io/cailloumajor/centrifugo-change-stream:3.1.4
+    environment:
+      - MONGODB_DATABASE=opcua
+      - MONGODB_COLLECTION=data
+      # Following environment variables will be taken from env file
+      - CENTRIFUGO_API_KEY
+      - MONGODB_URI
+    labels:
+      dozzle.enable: true
+    networks:
+      - net-private
+    restart: unless-stopped
+
+  config-api:
+    image: ghcr.io/cailloumajor/config-api:2.1.2
+    environment:
+      - MONGODB_DATABASE=services_config
+      # Following environment variables will be taken from env file
+      - MONGODB_URI
+    labels:
+      dozzle.enable: true
+      traefik.enable: true
+      traefik.http.middlewares.config-api-stripprefix.stripprefix.prefixes: /config-api
+      traefik.http.middlewares.config-api-stripprefix.stripprefix.forceslash: false
+      traefik.http.routers.config-api.middlewares: config-api-stripprefix@docker
+      traefik.http.routers.config-api.rule: PathPrefix(`/config-api/`) || Path(`/config-api`)
+    networks:
+      - net-private
+    restart: unless-stopped
+
+  factory-frontend:
+    image: ghcr.io/cailloumajor/factory-frontend:1.7.2
+    labels:
+      dozzle.enable: true
+      traefik.enable: true
+      traefik.http.routers.factory-frontend.rule: PathPrefix(`/`)
+      traefik.http.routers.factory-frontend.priority: 1
+      traefik.http.services.factory-frontend.loadbalancer.server.port: 8080
+    networks:
+      - net-private
+    restart: unless-stopped
+
+  mongodb-scraper:
+    image: ghcr.io/cailloumajor/mongodb-scraper:2.2.0
+    environment:
+      - MONGODB_DATABASE=opcua
+      - MONGODB_COLLECTION=data
+      # Following environment variables will be taken from env file
+      - MONGODB_URI
+      - INFLUXDB_API_TOKEN=${INFLUXDB_SCRAPER_TOKEN}
+      - INFLUXDB_ORG
+      - INFLUXDB_BUCKET
+    labels:
+      dozzle.enable: true
+    networks:
+      - net-private
+    restart: unless-stopped
+
+  # {{ range $key, $value := .stackConfig.opcua_proxy }}
+  opcua-proxy-{{ $key }}:
+    image: ghcr.io/cailloumajor/opcua-proxy:4.4.0
+    environment:
+      - PARTNER_ID={{ $key }}
+      - CONFIG_API_URL=http://config-api:8080/config/opcua/
+      - PKI_DIR=/pki
+      - OPCUA_SERVER_URL={{ $value.server_url }}
+      # Following environment variables will be taken from env file
+      - MONGODB_URI
+    labels:
+      dozzle.enable: true
+    networks:
+      - net-private
+    restart: unless-stopped
+    volumes:
+      - ./opcua-proxy/pki:/pki:ro
+  # {{ end }}
+
+networks:
+  net-private:

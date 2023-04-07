@@ -1,5 +1,7 @@
 # docker-compose.yml is generated
 /docker-compose.yml
 
-# config.toml contains sensitive data
+# Contains sensitive data
+.env
+/docker-compose.override.yml
 /stack-config.toml
