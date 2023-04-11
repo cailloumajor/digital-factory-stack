@@ -112,6 +112,9 @@ services:
     networks:
       - net-private
     restart: unless-stopped
+    ulimits:
+      nofile: 64000
+      nproc: 64000
     volumes:
       - ${MONGODB_DATA_HOST_PATH}:/data/db
 
