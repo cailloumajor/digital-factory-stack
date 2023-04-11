@@ -117,6 +117,7 @@ services:
       nproc: 64000
     volumes:
       - ${MONGODB_DATA_HOST_PATH}:/data/db
+      - ./initialize-replica-set.mongodb:/usr/local/share/initialize-replica-set.mongodb:ro
 
   centrifugo-change-stream:
     image: ghcr.io/cailloumajor/centrifugo-change-stream:3.1.4
