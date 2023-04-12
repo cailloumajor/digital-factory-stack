@@ -202,7 +202,7 @@ services:
       - private
     restart: unless-stopped
     volumes:
-      - ./opcua-proxy/pki:/pki:ro
+      - ./opcua-proxy/pki:/pki
   # {{ end }}
 
 networks:
