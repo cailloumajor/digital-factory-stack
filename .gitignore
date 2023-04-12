@@ -5,3 +5,4 @@
 .env
 /docker-compose.override.yml
 /stack-config.toml
+**/pki/
