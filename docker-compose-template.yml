@@ -32,7 +32,7 @@ services:
     ports:
       - 80:80
     restart: unless-stopped
-    user: 65534:65534
+    user: 65534:${STACK_GID}
     volumes:
       - ./traefik.toml:/etc/traefik/traefik.toml:ro
 
@@ -81,7 +81,7 @@ services:
       management:
         ipv4_address: 192.168.254.2
     restart: unless-stopped
-    user: 65534:65534
+    user: 65534:${STACK_GID}
     volumes:
       - ./centrifugo.toml:/usr/local/etc/centrifugo.toml:ro
 
@@ -201,6 +201,7 @@ services:
     networks:
       - private
     restart: unless-stopped
+    user: nonroot:${STACK_GID}
     volumes:
       - ./opcua-proxy/pki:/pki
   # {{ end }}
