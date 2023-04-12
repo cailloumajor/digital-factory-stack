@@ -213,5 +213,5 @@ networks:
       com.docker.network.bridge.enable_icc: "false"
     ipam:
       config:
-        - subnet: 192.168.254.0/16
+        - subnet: 192.168.254.0/24
           gateway: 192.168.254.254
