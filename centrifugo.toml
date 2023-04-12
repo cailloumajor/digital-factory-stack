@@ -1,3 +1,5 @@
+admin = true
+admin_insecure = true
 allow_anonymous_connect_without_token = true
 granular_proxy_mode = true
 health = true

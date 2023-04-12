@@ -11,7 +11,7 @@ services:
     labels:
       dozzle.enable: true
     networks:
-      - net-private
+      - private
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -25,8 +25,10 @@ services:
     labels:
       dozzle.enable: true
     networks:
-      - default
-      - net-private
+      default:
+      private:
+      management:
+        ipv4_address: 192.168.254.1
     ports:
       - 80:80
     restart: unless-stopped
@@ -47,7 +49,7 @@ services:
       traefik.enable: true
       traefik.http.routers.logging.rule: PathPrefix(`/logs/`) || Path(`/logs`)
     networks:
-      - net-private
+      - private
     restart: unless-stopped
     # Image does not contain `/etc/passwd`, so use numeric UID & GID
     user: 65534:65534
@@ -75,7 +77,9 @@ services:
       traefik.http.routers.centrifugo.middlewares: centrifugo-stripprefix@docker
       traefik.http.routers.centrifugo.rule: PathPrefix(`/centrifugo/`)
     networks:
-      - net-private
+      private:
+      management:
+        ipv4_address: 192.168.254.2
     restart: unless-stopped
     user: 65534:65534
     volumes:
@@ -97,7 +101,9 @@ services:
       traefik.http.routers.influxdb.middlewares: influxdb-stripprefix@docker
       traefik.http.routers.influxdb.rule: PathPrefix(`/influxdb/`)
     networks:
-      - net-private
+      private:
+      management:
+        ipv4_address: 192.168.254.3
     restart: unless-stopped
     volumes:
       - ${INFLUXDB_DATA_HOST_PATH}:/var/lib/influxdb2
@@ -110,7 +116,9 @@ services:
     labels:
       dozzle.enable: true
     networks:
-      - net-private
+      private:
+      management:
+        ipv4_address: 192.168.254.4
     restart: unless-stopped
     ulimits:
       nofile: 64000
@@ -130,7 +138,7 @@ services:
     labels:
       dozzle.enable: true
     networks:
-      - net-private
+      - private
     restart: unless-stopped
 
   config-api:
@@ -147,7 +155,7 @@ services:
       traefik.http.routers.config-api.middlewares: config-api-stripprefix@docker
       traefik.http.routers.config-api.rule: PathPrefix(`/config-api/`) || Path(`/config-api`)
     networks:
-      - net-private
+      - private
     restart: unless-stopped
 
   factory-frontend:
@@ -159,7 +167,7 @@ services:
       traefik.http.routers.factory-frontend.priority: 1
       traefik.http.services.factory-frontend.loadbalancer.server.port: 8080
     networks:
-      - net-private
+      - private
     restart: unless-stopped
 
   mongodb-scraper:
@@ -175,7 +183,7 @@ services:
     labels:
       dozzle.enable: true
     networks:
-      - net-private
+      - private
     restart: unless-stopped
 
   # {{ range $key, $value := .stackConfig.opcua_proxy }}
@@ -191,11 +199,19 @@ services:
     labels:
       dozzle.enable: true
     networks:
-      - net-private
+      - private
     restart: unless-stopped
     volumes:
       - ./opcua-proxy/pki:/pki:ro
   # {{ end }}
 
 networks:
-  net-private:
+  private:
+  management:
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "false"
+    ipam:
+      config:
+        - subnet: 192.168.254.0/16
+          gateway: 192.168.254.254
