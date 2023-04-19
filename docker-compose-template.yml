@@ -98,7 +98,7 @@ services:
     environment:
       - INFLUXD_REPORTING_DISABLED=true
     healthcheck:
-      test: curl -fsS http://127.0.0.1:8086/health || exit 1
+      test: influx ping || exit 1
       interval: 20s
       start_period: 1m
     labels:
