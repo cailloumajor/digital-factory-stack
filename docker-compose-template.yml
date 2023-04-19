@@ -116,6 +116,7 @@ services:
     restart: unless-stopped
     volumes:
       - ${INFLUXDB_DATA_HOST_PATH}:/var/lib/influxdb2
+      - influxdb-config:/etc/influxdb2
 
   mongodb:
     image: mongo:6.0.5
@@ -229,3 +230,6 @@ networks:
       config:
         - subnet: 192.168.254.0/24
           gateway: 192.168.254.254
+
+volumes:
+  influxdb-config:
