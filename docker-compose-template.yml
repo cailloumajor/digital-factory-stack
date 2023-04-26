@@ -208,12 +208,13 @@ services:
       - OPCUA_SERVER_URL={{ $value.server_url }}
       # Following environment variables will be taken from env file
       - MONGODB_URI
+    group_add:
+      - ${STACK_GID}
     labels:
       dozzle.enable: true
     networks:
       - private
     restart: unless-stopped
-    user: nonroot:${STACK_GID}
     volumes:
       - ./opcua-proxy/pki:/pki
   # {{ end }}
