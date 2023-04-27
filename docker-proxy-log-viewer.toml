@@ -1,0 +1,3 @@
+[[allow_filters]]
+method = "GET"
+path = "/{containers,events}/**"

@@ -4,31 +4,49 @@ name: digital-factory-stack
 
 services:
 
-  docker-socket-proxy:
-    image: ghcr.io/tecnativa/docker-socket-proxy:0.1.1
+  docker-proxy-reverse-proxy:
+    image: ghcr.io/cailloumajor/docker-socket-proxy:1.0.1
     environment:
-      - CONTAINERS=1
-    healthcheck:
-      test: nc -zv 127.0.0.1 2375 || exit 1
+      - CONFIG_FILE=/usr/local/etc/docker-socket-proxy.toml
+    group_add:
+      - ${DOCKER_SOCKET_GID}
+      - ${STACK_GID}
     labels:
       dozzle.enable: true
     networks:
-      - docker-api
+      - docker-api-reverse-proxy
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./docker-proxy-reverse-proxy.toml:/usr/local/etc/docker-socket-proxy.toml:ro
+
+  docker-proxy-log-viewer:
+    image: ghcr.io/cailloumajor/docker-socket-proxy:1.0.1
+    environment:
+      - CONFIG_FILE=/usr/local/etc/docker-socket-proxy.toml
+    group_add:
+      - ${DOCKER_SOCKET_GID}
+      - ${STACK_GID}
+    labels:
+      dozzle.enable: true
+    networks:
+      - docker-api-log-viewer
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./docker-proxy-log-viewer.toml:/usr/local/etc/docker-socket-proxy.toml:ro
 
   reverse-proxy:
     image: traefik:v2.9.9
     depends_on:
-      - docker-socket-proxy
+      - docker-proxy-reverse-proxy
     healthcheck:
       test: traefik healthcheck
     labels:
       dozzle.enable: true
     networks:
       default:
-      docker-api:
+      docker-api-reverse-proxy:
       private:
       management:
         ipv4_address: 192.168.254.1
@@ -42,9 +60,9 @@ services:
   log-viewer:
     image: amir20/dozzle:v4.9.1
     depends_on:
-      - docker-socket-proxy
+      - docker-proxy-log-viewer
     environment:
-      - DOCKER_HOST=tcp://docker-socket-proxy:2375
+      - DOCKER_HOST=tcp://docker-proxy-log-viewer:2375
       - DOZZLE_BASE=/logs
       - DOZZLE_FILTER=label=dozzle.enable=true
       - DOZZLE_NO_ANALYTICS=true
@@ -55,7 +73,7 @@ services:
       traefik.docker.network: digital-factory-stack_private
       traefik.http.routers.logging.rule: PathPrefix(`/logs/`) || Path(`/logs`)
     networks:
-      - docker-api
+      - docker-api-log-viewer
       - private
     restart: unless-stopped
     # Image does not contain `/etc/passwd`, so use numeric UID & GID
@@ -221,7 +239,9 @@ services:
 
 networks:
   private:
-  docker-api:
+  docker-api-reverse-proxy:
+    internal: true
+  docker-api-log-viewer:
     internal: true
   management:
     internal: true

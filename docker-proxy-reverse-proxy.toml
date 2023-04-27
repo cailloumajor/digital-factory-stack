@@ -1,0 +1,7 @@
+[[allow_filters]]
+method = "GET"
+path = "/version"
+
+[[allow_filters]]
+method = "GET"
+path = "/{events,containers}/**"
