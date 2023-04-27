@@ -45,11 +45,10 @@ services:
     labels:
       dozzle.enable: true
     networks:
-      default:
       docker-api-reverse-proxy:
-      private:
       management:
         ipv4_address: 192.168.254.1
+      reverse-proxy:
     ports:
       - 80:80
     restart: unless-stopped
@@ -66,15 +65,13 @@ services:
       - DOZZLE_BASE=/logs
       - DOZZLE_FILTER=label=dozzle.enable=true
       - DOZZLE_NO_ANALYTICS=true
-    healthcheck:
-      test: [ CMD, /dozzle, healthcheck ]
     labels:
       traefik.enable: true
-      traefik.docker.network: digital-factory-stack_private
+      traefik.docker.network: digital-factory-stack_reverse-proxy
       traefik.http.routers.logging.rule: PathPrefix(`/logs/`) || Path(`/logs`)
     networks:
       - docker-api-log-viewer
-      - private
+      - reverse-proxy
     restart: unless-stopped
     # Image does not contain `/etc/passwd`, so use numeric UID & GID
     user: 65534:65534
@@ -97,15 +94,16 @@ services:
     labels:
       dozzle.enable: true
       traefik.enable: true
-      traefik.docker.network: digital-factory-stack_private
+      traefik.docker.network: digital-factory-stack_reverse-proxy
       traefik.http.middlewares.centrifugo-stripprefix.stripprefix.prefixes: /centrifugo
       traefik.http.middlewares.centrifugo-stripprefix.stripprefix.forceslash: false
       traefik.http.routers.centrifugo.middlewares: centrifugo-stripprefix@docker
       traefik.http.routers.centrifugo.rule: PathPrefix(`/centrifugo/`)
     networks:
-      private:
       management:
         ipv4_address: 192.168.254.2
+      private:
+      reverse-proxy:
     restart: unless-stopped
     user: nobody:${STACK_GID}
     volumes:
@@ -122,13 +120,14 @@ services:
     labels:
       dozzle.enable: true
       traefik.enable: true
-      traefik.docker.network: digital-factory-stack_private
+      traefik.docker.network: digital-factory-stack_reverse-proxy
       traefik.http.middlewares.influxdb-stripprefix.stripprefix.prefixes: /influxdb
       traefik.http.middlewares.influxdb-stripprefix.stripprefix.forceslash: false
       traefik.http.routers.influxdb.middlewares: influxdb-stripprefix@docker
       traefik.http.routers.influxdb.rule: PathPrefix(`/influxdb/`)
     networks:
       private:
+      reverse-proxy:
       management:
         ipv4_address: 192.168.254.3
     restart: unless-stopped
@@ -178,13 +177,14 @@ services:
     labels:
       dozzle.enable: true
       traefik.enable: true
-      traefik.docker.network: digital-factory-stack_private
+      traefik.docker.network: digital-factory-stack_reverse-proxy
       traefik.http.middlewares.config-api-stripprefix.stripprefix.prefixes: /config-api
       traefik.http.middlewares.config-api-stripprefix.stripprefix.forceslash: false
       traefik.http.routers.config-api.middlewares: config-api-stripprefix@docker
       traefik.http.routers.config-api.rule: PathPrefix(`/config-api/`) || Path(`/config-api`)
     networks:
       - private
+      - reverse-proxy
     restart: unless-stopped
 
   factory-frontend:
@@ -192,12 +192,12 @@ services:
     labels:
       dozzle.enable: true
       traefik.enable: true
-      traefik.docker.network: digital-factory-stack_private
+      traefik.docker.network: digital-factory-stack_reverse-proxy
       traefik.http.routers.factory-frontend.rule: PathPrefix(`/`)
       traefik.http.routers.factory-frontend.priority: 1
       traefik.http.services.factory-frontend.loadbalancer.server.port: 8080
     networks:
-      - private
+      - reverse-proxy
     restart: unless-stopped
 
   mongodb-scraper:
@@ -238,11 +238,8 @@ services:
   # {{ end }}
 
 networks:
-  private:
   docker-api-reverse-proxy:
-    internal: true
   docker-api-log-viewer:
-    internal: true
   management:
     internal: true
     driver_opts:
@@ -251,6 +248,8 @@ networks:
       config:
         - subnet: 192.168.254.0/24
           gateway: 192.168.254.254
+  private:
+  reverse-proxy:
 
 volumes:
   influxdb-config:
