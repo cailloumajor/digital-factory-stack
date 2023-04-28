@@ -17,3 +17,6 @@ level = "INFO"
 allowEmptyServices = true
 endpoint = "tcp://docker-proxy-reverse-proxy:2375"
 exposedByDefault = false
+
+# [tracing.jaeger]
+# localAgentHostPort = "opentelemetry-collector:6831"

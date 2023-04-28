@@ -1,0 +1,36 @@
+extensions:
+  basicauth/grafana:
+    client_auth:
+      username: ${env:GRAFANA_OTLP_USER}
+      password: ${env:GRAFANA_OTLP_PASS}
+
+receivers:
+  jaeger/traefik:
+    protocols:
+      thrift_compact:
+
+processors:
+  batch:
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 25
+    spike_limit_percentage: 10
+
+exporters:
+  otlphttp:
+    auth:
+      authenticator: basicauth/grafana
+    endpoint: ${env:GRAFANA_OTLP_ENDPOINT}
+
+service:
+  extensions:
+    - basicauth/grafana
+  pipelines:
+    traces:
+      receivers:
+        - jaeger/traefik
+      processors:
+        - memory_limiter
+        - batch
+      exporters:
+        - otlphttp

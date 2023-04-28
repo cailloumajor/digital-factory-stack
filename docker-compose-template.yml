@@ -154,6 +154,29 @@ services:
       - ${MONGODB_DATA_HOST_PATH}:/data/db
       - ./initialize-replica-set.mongodb:/usr/local/share/initialize-replica-set.mongodb:ro
 
+  # opentelemetry-collector:
+  #   image: otel/opentelemetry-collector-contrib:0.75.0
+  #   command:
+  #     - --config
+  #     - /usr/local/etc/otelcol.yaml
+  #   environment:
+  #     # Following environment variables will be taken from env file
+  #     - GRAFANA_OTLP_ENDPOINT
+  #     - GRAFANA_OTLP_PASS
+  #     - GRAFANA_OTLP_USER
+  #     - HTTP_PROXY
+  #     - HTTPS_PROXY
+  #     - NO_PROXY
+  #   group_add:
+  #     - ${STACK_GID}
+  #   labels:
+  #     dozzle.enable: true
+  #   networks:
+  #     - telemetry
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./otelcol.yaml:/usr/local/etc/otelcol.yaml
+
   centrifugo-change-stream:
     image: ghcr.io/cailloumajor/centrifugo-change-stream:3.1.4
     environment:
@@ -248,6 +271,7 @@ networks:
       config:
         - subnet: 192.168.254.0/24
           gateway: 192.168.254.254
+  telemetry:
   private:
   reverse-proxy:
 
