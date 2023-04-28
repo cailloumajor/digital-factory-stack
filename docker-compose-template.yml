@@ -195,7 +195,7 @@ services:
       traefik.docker.network: digital-factory-stack_reverse-proxy
       traefik.http.routers.factory-frontend.rule: PathPrefix(`/`)
       traefik.http.routers.factory-frontend.priority: 1
-      traefik.http.services.factory-frontend.loadbalancer.server.port: 8080
+      traefik.http.services.factory-frontend-digital-factory-stack.loadbalancer.server.port: 8080
     networks:
       - reverse-proxy
     restart: unless-stopped
