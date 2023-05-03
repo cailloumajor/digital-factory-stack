@@ -24,6 +24,8 @@ handle {
 	file_server {
 		precompressed gzip
 	}
+
+	# https://quasar.dev/quasar-cli-vite/developing-spa/deploying#important-hosting-configuration
 	@assets {
 		path *.jpg *.jpeg *.gif *.png *.svg *.webp *.js *.css *.eot *.otf *.ttf *.ttc *.woff *.woff2 *.font.css
 	}
