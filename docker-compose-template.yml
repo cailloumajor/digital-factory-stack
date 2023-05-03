@@ -4,78 +4,6 @@ name: digital-factory-stack
 
 services:
 
-  docker-proxy-reverse-proxy:
-    image: ghcr.io/cailloumajor/docker-socket-proxy:1.0.1
-    environment:
-      - CONFIG_FILE=/usr/local/etc/docker-socket-proxy.toml
-    group_add:
-      - ${DOCKER_SOCKET_GID}
-      - ${STACK_GID}
-    labels:
-      dozzle.enable: true
-    networks:
-      - docker-api-reverse-proxy
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./docker-proxy-reverse-proxy.toml:/usr/local/etc/docker-socket-proxy.toml:ro
-
-  docker-proxy-log-viewer:
-    image: ghcr.io/cailloumajor/docker-socket-proxy:1.0.1
-    environment:
-      - CONFIG_FILE=/usr/local/etc/docker-socket-proxy.toml
-    group_add:
-      - ${DOCKER_SOCKET_GID}
-      - ${STACK_GID}
-    labels:
-      dozzle.enable: true
-    networks:
-      - docker-api-log-viewer
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./docker-proxy-log-viewer.toml:/usr/local/etc/docker-socket-proxy.toml:ro
-
-  reverse-proxy:
-    image: traefik:v2.9.9
-    depends_on:
-      - docker-proxy-reverse-proxy
-    healthcheck:
-      test: traefik healthcheck
-    labels:
-      dozzle.enable: true
-    networks:
-      docker-api-reverse-proxy:
-      management:
-        ipv4_address: 192.168.254.1
-      reverse-proxy:
-    ports:
-      - 80:80
-    restart: unless-stopped
-    user: nobody:${STACK_GID}
-    volumes:
-      - ./traefik.toml:/etc/traefik/traefik.toml:ro
-
-  log-viewer:
-    image: amir20/dozzle:v4.9.1
-    depends_on:
-      - docker-proxy-log-viewer
-    environment:
-      - DOCKER_HOST=tcp://docker-proxy-log-viewer:2375
-      - DOZZLE_BASE=/logs
-      - DOZZLE_FILTER=label=dozzle.enable=true
-      - DOZZLE_NO_ANALYTICS=true
-    labels:
-      traefik.enable: true
-      traefik.docker.network: digital-factory-stack_reverse-proxy
-      traefik.http.routers.logging.rule: PathPrefix(`/logs/`) || Path(`/logs`)
-    networks:
-      - docker-api-log-viewer
-      - reverse-proxy
-    restart: unless-stopped
-    # Image does not contain `/etc/passwd`, so use numeric UID & GID
-    user: 65534:65534
-
   centrifugo:
     image: centrifugo/centrifugo:v4.1.2
     command:
@@ -93,12 +21,6 @@ services:
       test: wget --spider http://127.0.0.1:8000/health || exit 1
     labels:
       dozzle.enable: true
-      traefik.enable: true
-      traefik.docker.network: digital-factory-stack_reverse-proxy
-      traefik.http.middlewares.centrifugo-stripprefix.stripprefix.prefixes: /centrifugo
-      traefik.http.middlewares.centrifugo-stripprefix.stripprefix.forceslash: false
-      traefik.http.routers.centrifugo.middlewares: centrifugo-stripprefix@docker
-      traefik.http.routers.centrifugo.rule: PathPrefix(`/centrifugo/`)
     networks:
       management:
         ipv4_address: 192.168.254.2
@@ -119,12 +41,6 @@ services:
       start_period: 1m
     labels:
       dozzle.enable: true
-      traefik.enable: true
-      traefik.docker.network: digital-factory-stack_reverse-proxy
-      traefik.http.middlewares.influxdb-stripprefix.stripprefix.prefixes: /influxdb
-      traefik.http.middlewares.influxdb-stripprefix.stripprefix.forceslash: false
-      traefik.http.routers.influxdb.middlewares: influxdb-stripprefix@docker
-      traefik.http.routers.influxdb.rule: PathPrefix(`/influxdb/`)
     networks:
       private:
       reverse-proxy:
@@ -134,6 +50,24 @@ services:
     volumes:
       - ${INFLUXDB_DATA_HOST_PATH}:/var/lib/influxdb2
       - influxdb-config:/etc/influxdb2
+
+  log-viewer:
+    image: amir20/dozzle:v4.9.1
+    depends_on:
+      - docker-proxy-log-viewer
+    environment:
+      - DOCKER_HOST=tcp://docker-proxy-log-viewer:2375
+      - DOZZLE_BASE=/logs
+      - DOZZLE_FILTER=label=dozzle.enable=true
+      - DOZZLE_NO_ANALYTICS=true
+    healthcheck:
+      test: ["CMD", "/dozzle", "healthcheck"]
+    networks:
+      - docker-api-log-viewer
+      - reverse-proxy
+    restart: unless-stopped
+    # Image does not contain `/etc/passwd`, so use numeric UID & GID
+    user: 65534:65534
 
   mongodb:
     image: mongo:6.0.5
@@ -177,6 +111,25 @@ services:
   #   volumes:
   #     - ./otelcol.yaml:/usr/local/etc/otelcol.yaml
 
+  webserver:
+    image: caddy:2.6.4
+    environment:
+      # Following environment variables will be taken from env file
+      - SITE_ADDRESS
+    labels:
+      dozzle.enable: true
+    networks:
+      - reverse-proxy
+    ports:
+      - 80:80
+      - 443:443
+    restart: unless-stopped
+    volumes:
+      - caddy-config:/config
+      - caddy-data:/data
+      - factory-frontend-static:/srv/www:ro
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+
   centrifugo-change-stream:
     image: ghcr.io/cailloumajor/centrifugo-change-stream:3.1.4
     environment:
@@ -199,29 +152,34 @@ services:
       - MONGODB_URI
     labels:
       dozzle.enable: true
-      traefik.enable: true
-      traefik.docker.network: digital-factory-stack_reverse-proxy
-      traefik.http.middlewares.config-api-stripprefix.stripprefix.prefixes: /config-api
-      traefik.http.middlewares.config-api-stripprefix.stripprefix.forceslash: false
-      traefik.http.routers.config-api.middlewares: config-api-stripprefix@docker
-      traefik.http.routers.config-api.rule: PathPrefix(`/config-api/`) || Path(`/config-api`)
     networks:
       - private
       - reverse-proxy
     restart: unless-stopped
 
-  factory-frontend:
-    image: ghcr.io/cailloumajor/factory-frontend:1.7.2
+  docker-proxy-log-viewer:
+    image: ghcr.io/cailloumajor/docker-socket-proxy:1.0.1
+    environment:
+      - CONFIG_FILE=/usr/local/etc/docker-socket-proxy.toml
+    group_add:
+      - ${DOCKER_SOCKET_GID}
+      - ${STACK_GID}
     labels:
       dozzle.enable: true
-      traefik.enable: true
-      traefik.docker.network: digital-factory-stack_reverse-proxy
-      traefik.http.routers.factory-frontend.rule: PathPrefix(`/`)
-      traefik.http.routers.factory-frontend.priority: 1
-      traefik.http.services.factory-frontend-digital-factory-stack.loadbalancer.server.port: 8080
     networks:
-      - reverse-proxy
+      - docker-api-log-viewer
     restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./docker-proxy-log-viewer.toml:/usr/local/etc/docker-socket-proxy.toml:ro
+
+  factory-frontend:
+    image: ghcr.io/cailloumajor/factory-frontend:1.8.0
+    labels:
+      dozzle.enable: true
+    restart: unless-stopped
+    volumes:
+      - factory-frontend-static:/srv/www
 
   mongodb-scraper:
     image: ghcr.io/cailloumajor/mongodb-scraper:2.2.0
@@ -261,7 +219,6 @@ services:
   # {{ end }}
 
 networks:
-  docker-api-reverse-proxy:
   docker-api-log-viewer:
   management:
     internal: true
@@ -276,4 +233,7 @@ networks:
   reverse-proxy:
 
 volumes:
+  caddy-config:
+  caddy-data:
+  factory-frontend-static:
   influxdb-config:

@@ -1,0 +1,34 @@
+{$SITE_ADDRESS}
+
+handle_path /centrifugo/* {
+	reverse_proxy centrifugo:8000
+}
+
+handle_path /config-api/* {
+	reverse_proxy config-api:8080
+}
+
+rewrite /influxdb /influxdb/
+handle_path /influxdb/* {
+	reverse_proxy influxdb:8086
+}
+
+rewrite /logs /logs/
+handle /logs/* {
+	reverse_proxy log-viewer:8080
+}
+
+handle {
+	root * /srv/www
+	try_files {path} /
+	file_server {
+		precompressed br
+	}
+	@assets {
+		path *.jpg *.jpeg *.gif *.png *.svg *.webp *.js *.css *.eot *.otf *.ttf *.ttc *.woff *.woff2 *.font.css
+	}
+	route {
+		header Cache-Control "no-cache,no-store,must-revalidate"
+		header @assets Cache-Control "max-age=604800"
+	}
+}
