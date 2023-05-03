@@ -22,7 +22,7 @@ handle {
 	root * /srv/www
 	try_files {path} /
 	file_server {
-		precompressed br
+		precompressed gzip
 	}
 	@assets {
 		path *.jpg *.jpeg *.gif *.png *.svg *.webp *.js *.css *.eot *.otf *.ttf *.ttc *.woff *.woff2 *.font.css
