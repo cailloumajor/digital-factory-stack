@@ -3,5 +3,11 @@
   "extends": [
     "config:base"
   ],
-  "semanticCommits": "enabled"
+  "semanticCommits": "enabled",
+  "packageRules": [
+    {
+      "matchManagers": ["docker-compose"],
+      "semanticCommitType": "fix"
+    }
+  ]
 }
