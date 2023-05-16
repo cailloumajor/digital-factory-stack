@@ -22,10 +22,8 @@ services:
     labels:
       dozzle.enable: true
     networks:
-      management:
-        ipv4_address: 192.168.254.2
-      private:
-      reverse-proxy:
+      - private
+      - reverse-proxy
     restart: unless-stopped
     user: nobody:${STACK_GID}
     volumes:
@@ -42,10 +40,8 @@ services:
     labels:
       dozzle.enable: true
     networks:
-      private:
-      reverse-proxy:
-      management:
-        ipv4_address: 192.168.254.3
+      - private
+      - reverse-proxy
     restart: unless-stopped
     volumes:
       - ${INFLUXDB_DATA_HOST_PATH}:/var/lib/influxdb2
@@ -77,9 +73,7 @@ services:
     labels:
       dozzle.enable: true
     networks:
-      private:
-      management:
-        ipv4_address: 192.168.254.4
+      - private
     restart: unless-stopped
     ulimits:
       nofile: 64000
@@ -220,14 +214,6 @@ services:
 
 networks:
   docker-api-log-viewer:
-  management:
-    internal: true
-    driver_opts:
-      com.docker.network.bridge.enable_icc: "false"
-    ipam:
-      config:
-        - subnet: 192.168.254.0/24
-          gateway: 192.168.254.254
   telemetry:
   private:
   reverse-proxy:
