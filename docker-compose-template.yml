@@ -5,7 +5,7 @@ name: digital-factory-stack
 services:
 
   centrifugo:
-    image: centrifugo/centrifugo:v4.1.2
+    image: centrifugo/centrifugo:v4.1.3
     command:
       - centrifugo
       - --config
@@ -52,7 +52,7 @@ services:
       - influxdb-config:/etc/influxdb2
 
   log-viewer:
-    image: amir20/dozzle:v4.9.1
+    image: amir20/dozzle:v4.10.8
     depends_on:
       - docker-proxy-log-viewer
     environment:
@@ -145,7 +145,7 @@ services:
     restart: unless-stopped
 
   config-api:
-    image: ghcr.io/cailloumajor/config-api:2.1.2
+    image: ghcr.io/cailloumajor/config-api:2.2.1
     environment:
       - MONGODB_DATABASE=services_config
       # Following environment variables will be taken from env file
