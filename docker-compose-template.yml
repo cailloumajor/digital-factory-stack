@@ -209,7 +209,7 @@ services:
       - private
     restart: unless-stopped
     volumes:
-      - ./opcua-proxy/pki:/pki
+      - ./pki:/pki
   # {{ end }}
 
 networks:
