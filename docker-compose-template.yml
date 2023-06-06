@@ -176,7 +176,7 @@ services:
       - factory-frontend-static:/srv/www
 
   mongodb-influxdb:
-    image: ghcr.io/cailloumajor/mongodb-influxdb:3.0.0
+    image: ghcr.io/cailloumajor/mongodb-influxdb:3.0.1
     environment:
       - MONGODB_DATABASE=opcua
       - MONGODB_COLLECTION=data
