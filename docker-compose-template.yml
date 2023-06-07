@@ -48,7 +48,7 @@ services:
       - influxdb-config:/etc/influxdb2
 
   log-viewer:
-    image: amir20/dozzle:v4.10.11
+    image: amir20/dozzle:v4.10.12
     depends_on:
       - docker-proxy-log-viewer
     environment:
