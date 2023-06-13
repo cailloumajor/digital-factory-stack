@@ -125,7 +125,7 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
 
   centrifugo-change-stream:
-    image: ghcr.io/cailloumajor/centrifugo-change-stream:3.2.2
+    image: ghcr.io/cailloumajor/centrifugo-change-stream:3.2.3
     environment:
       - MONGODB_DATABASE=opcua
       - MONGODB_COLLECTION=data
