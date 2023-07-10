@@ -175,6 +175,21 @@ services:
     volumes:
       - factory-frontend-static:/srv/www
 
+  influxdb-compute-api:
+    image: ghcr.io/cailloumajor/influxdb-compute-api:0.1.1
+    environment:
+      - INFLUXDB_MEASUREMENT=opcua.data
+      # Following environment variables will be taken from env file
+      - INFLUXDB_API_TOKEN=${INFLUXDB_COMPUTE_TOKEN}
+      - INFLUXDB_ORG
+      - INFLUXDB_BUCKET
+    labels:
+      dozzle.enable: true
+    networks:
+      - private
+      - reverse-proxy
+    restart: unless-stopped
+
   mongodb-influxdb:
     image: ghcr.io/cailloumajor/mongodb-influxdb:3.0.1
     environment:

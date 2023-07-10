@@ -4,6 +4,10 @@ handle_path /centrifugo/* {
 	reverse_proxy centrifugo:8000
 }
 
+handle_path /compute-api/* {
+	reverse_proxy influxdb-compute-api:8080
+}
+
 handle_path /config-api/* {
 	reverse_proxy config-api:8080
 }
