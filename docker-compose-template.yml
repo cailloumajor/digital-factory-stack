@@ -168,7 +168,7 @@ services:
       - ./docker-proxy-log-viewer.toml:/usr/local/etc/docker-socket-proxy.toml:ro
 
   factory-frontend:
-    image: ghcr.io/cailloumajor/factory-frontend:1.8.8
+    image: ghcr.io/cailloumajor/factory-frontend:1.9.0
     labels:
       dozzle.enable: true
     restart: unless-stopped
