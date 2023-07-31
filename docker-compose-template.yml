@@ -176,7 +176,7 @@ services:
       - factory-frontend-static:/srv/www
 
   influxdb-compute-api:
-    image: ghcr.io/cailloumajor/influxdb-compute-api:0.1.1
+    image: ghcr.io/cailloumajor/influxdb-compute-api:0.1.3
     environment:
       - INFLUXDB_MEASUREMENT=opcua.data
       # Following environment variables will be taken from env file
