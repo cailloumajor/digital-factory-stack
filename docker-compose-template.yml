@@ -106,7 +106,7 @@ services:
   #     - ./otelcol.yaml:/usr/local/etc/otelcol.yaml
 
   webserver:
-    image: caddy:2.6.4
+    image: caddy:2.7.3
     environment:
       # Following environment variables will be taken from env file
       - SITE_ADDRESS
