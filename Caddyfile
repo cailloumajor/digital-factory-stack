@@ -12,11 +12,6 @@ handle_path /config-api/* {
 	reverse_proxy config-api:8080
 }
 
-rewrite /influxdb /influxdb/
-handle_path /influxdb/* {
-	reverse_proxy influxdb:8086
-}
-
 rewrite /logs /logs/
 handle /logs/* {
 	reverse_proxy log-viewer:8080
