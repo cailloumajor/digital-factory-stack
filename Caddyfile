@@ -12,6 +12,11 @@ handle_path /config-api/* {
 	reverse_proxy config-api:8080
 }
 
+rewrite /grafana /grafana/
+handle /grafana/* {
+	reverse_proxy grafana:3000
+}
+
 rewrite /logs /logs/
 handle /logs/* {
 	reverse_proxy log-viewer:8080

@@ -29,6 +29,33 @@ services:
     volumes:
       - ./centrifugo.toml:/usr/local/etc/centrifugo.toml:ro
 
+  grafana:
+    image: grafana/grafana-oss:10.0.3
+    environment:
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_SERVER_ENABLE_GZIP=true
+      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s:%(http_port)s/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - INFLUXDB_URL=http://influxdb:8086
+      # Following environment variables will be taken from env file
+      - GF_SERVER_DOMAIN
+      - INFLUXDB_API_TOKEN=${INFLUXDB_GRAFANA_TOKEN}
+      - INFLUXDB_BUCKET
+      - INFLUXDB_ORG
+    group_add:
+      - ${STACK_GID}
+    healthcheck:
+      test: curl -f localhost:3000/api/health || exit 1
+    labels:
+      dozzle.enable: true
+    networks:
+      - private
+      - reverse-proxy
+    restart: unless-stopped
+    volumes:
+      - ${GRAFANA_DATA_HOST_PATH}:/var/lib/grafana
+      - ./grafana-influxdb-source.yaml:/etc/grafana/provisioning/datasources/influxdb.yaml
+
   influxdb:
     image: influxdb:2.7.1
     environment:
