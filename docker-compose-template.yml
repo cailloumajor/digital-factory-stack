@@ -210,6 +210,8 @@ services:
       - INFLUXDB_API_TOKEN=${INFLUXDB_COMPUTE_TOKEN}
       - INFLUXDB_ORG
       - INFLUXDB_BUCKET
+      - SHIFT_START_TIMES
+      - PAUSES
     labels:
       dozzle.enable: true
     networks:
