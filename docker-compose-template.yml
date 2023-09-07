@@ -179,7 +179,7 @@ services:
     restart: unless-stopped
 
   docker-proxy-log-viewer:
-    image: ghcr.io/cailloumajor/docker-socket-proxy:1.0.7
+    image: ghcr.io/cailloumajor/docker-socket-proxy:1.0.8
     environment:
       - CONFIG_FILE=/usr/local/etc/docker-socket-proxy.toml
     group_add:
