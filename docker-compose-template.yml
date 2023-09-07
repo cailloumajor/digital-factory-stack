@@ -203,8 +203,9 @@ services:
       - factory-frontend-static:/srv/www
 
   influxdb-compute-api:
-    image: ghcr.io/cailloumajor/influxdb-compute-api:2.1.0
+    image: ghcr.io/cailloumajor/influxdb-compute-api:2.2.0
     environment:
+      - CONFIG_API_URL=http://config-api:8080/config/line_dashboard/
       - INFLUXDB_MEASUREMENT=opcua.data
       # Following environment variables will be taken from env file
       - INFLUXDB_API_TOKEN=${INFLUXDB_COMPUTE_TOKEN}
