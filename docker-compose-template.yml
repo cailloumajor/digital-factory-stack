@@ -203,7 +203,7 @@ services:
       - factory-frontend-static:/srv/www
 
   influxdb-compute-api:
-    image: ghcr.io/cailloumajor/influxdb-compute-api:2.2.0
+    image: ghcr.io/cailloumajor/influxdb-compute-api:2.3.0
     environment:
       - CONFIG_API_URL=http://config-api:8080/config/line_dashboard/
       - INFLUXDB_MEASUREMENT=opcua.data
@@ -211,8 +211,6 @@ services:
       - INFLUXDB_API_TOKEN=${INFLUXDB_COMPUTE_TOKEN}
       - INFLUXDB_ORG
       - INFLUXDB_BUCKET
-      - SHIFT_START_TIMES
-      - PAUSES
     labels:
       dozzle.enable: true
     networks:
