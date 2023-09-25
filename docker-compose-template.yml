@@ -37,7 +37,7 @@ services:
       - GF_AUTH_ANONYMOUS_ORG_NAME=Public
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
       - GF_SERVER_ENABLE_GZIP=true
-      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s:%(http_port)s/grafana/
+      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
       - INFLUXDB_URL=http://influxdb:8086
       # Following environment variables will be taken from env file
