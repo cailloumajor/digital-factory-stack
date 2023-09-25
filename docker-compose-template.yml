@@ -33,6 +33,7 @@ services:
     image: grafana/grafana-oss:10.1.2
     environment:
       - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
       - GF_SERVER_ENABLE_GZIP=true
       - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s:%(http_port)s/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
