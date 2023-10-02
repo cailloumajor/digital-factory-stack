@@ -239,7 +239,7 @@ services:
 
   # {{ range $key, $value := .stackConfig.opcua_proxy }}
   opcua-proxy-{{ $key }}:
-    image: ghcr.io/cailloumajor/opcua-proxy:5.3.2
+    image: ghcr.io/cailloumajor/opcua-proxy:5.3.3
     environment:
       - PARTNER_ID={{ $key }}
       - CONFIG_API_URL=http://config-api:8080/config/opcua/
