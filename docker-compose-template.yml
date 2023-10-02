@@ -222,7 +222,7 @@ services:
     restart: unless-stopped
 
   mongodb-influxdb:
-    image: ghcr.io/cailloumajor/mongodb-influxdb:3.0.11
+    image: ghcr.io/cailloumajor/mongodb-influxdb:3.0.12
     environment:
       - MONGODB_DATABASE=opcua
       - MONGODB_COLLECTION=data
