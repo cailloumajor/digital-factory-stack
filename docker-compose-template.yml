@@ -96,7 +96,7 @@ services:
     user: 65534:65534
 
   mongodb:
-    image: mongo:7.0.1
+    image: mongo:7.0.2
     command: --replSet=dummy
     healthcheck:
       test: "mongosh --quiet --norc --eval 'quit(db.runCommand({ ping: 1 }).ok ? 0 : 1)'"
