@@ -206,7 +206,7 @@ services:
       - factory-frontend-static:/srv/www
 
   influxdb-compute-api:
-    image: ghcr.io/cailloumajor/influxdb-compute-api:2.4.1
+    image: ghcr.io/cailloumajor/influxdb-compute-api:2.4.2
     environment:
       - CONFIG_API_URL=http://config-api:8080/config/line_dashboard/
       - INFLUXDB_MEASUREMENT=opcua.data
