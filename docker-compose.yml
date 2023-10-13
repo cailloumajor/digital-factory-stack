@@ -237,14 +237,12 @@ services:
       - private
     restart: unless-stopped
 
-  # {{ range $key, $value := .stackConfig.opcua_proxy }}
-  opcua-proxy-{{ $key }}:
-    image: ghcr.io/cailloumajor/opcua-proxy:5.3.3
+  opcua-proxy:
+    image: ghcr.io/cailloumajor/opcua-proxy:6.0.0
     environment:
-      - PARTNER_ID={{ $key }}
-      - CONFIG_API_URL=http://config-api:8080/config/opcua/
+      - MONGODB_DATABASE=opcua
+      - CONFIG_API_URL=http://config-api:8080/config/opcua
       - PKI_DIR=/pki
-      - OPCUA_SERVER_URL={{ $value.server_url }}
       # Following environment variables will be taken from env file
       - MONGODB_URI
     group_add:
@@ -256,7 +254,6 @@ services:
     restart: unless-stopped
     volumes:
       - ./pki:/pki
-  # {{ end }}
 
 networks:
   docker-api-log-viewer:

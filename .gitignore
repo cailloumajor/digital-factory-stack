@@ -1,11 +1,4 @@
-# Task directory
-.task/
-
-# docker-compose.yml is generated
-/docker-compose.yml
-
 # Contains sensitive data
 .env
 /docker-compose.override.yml
-/stack-config.toml
 **/pki/
