@@ -257,7 +257,7 @@ services:
 
   # Legacy Centrifugo
   centrifugo-legacy:
-    image: centrifugo/centrifugo:v3.0.5
+    image: centrifugo/centrifugo:v5.1.0
     command:
       - centrifugo
       - --config
