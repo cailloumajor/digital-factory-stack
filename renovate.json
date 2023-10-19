@@ -8,6 +8,11 @@
     {
       "matchManagers": ["docker-compose"],
       "semanticCommitType": "fix"
+    },
+    {
+      "matchPackageNames": ["centrifugo/centrifugo"],
+      "matchCurrentVersion": "v3.0.5",
+      "enabled": false
     }
   ]
 }
