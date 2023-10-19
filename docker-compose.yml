@@ -169,7 +169,7 @@ services:
     restart: unless-stopped
 
   config-api:
-    image: ghcr.io/cailloumajor/config-api:2.4.1
+    image: ghcr.io/cailloumajor/config-api:2.4.2
     environment:
       - MONGODB_DATABASE=services_config
       # Following environment variables will be taken from env file
