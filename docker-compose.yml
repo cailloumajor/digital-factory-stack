@@ -15,8 +15,6 @@ services:
       - CENTRIFUGO_ALLOWED_ORIGINS
       - CENTRIFUGO_API_KEY
       - CENTRIFUGO_TOKEN_HMAC_SECRET_KEY
-    expose:
-      - 8000
     healthcheck:
       test: wget --spider http://127.0.0.1:8000/health || exit 1
     labels:
@@ -140,6 +138,7 @@ services:
     environment:
       # Following environment variables will be taken from env file
       - SITE_ADDRESS
+      - SITE_ADDRESS_LEGACY
     labels:
       dozzle.enable: true
     networks:
@@ -152,6 +151,7 @@ services:
       - caddy-config:/config
       - caddy-data:/data
       - factory-frontend-static:/srv/www:ro
+      - frontend-legacy-static:/srv/www-legacy:ro
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
 
   centrifugo-change-stream:
@@ -255,6 +255,87 @@ services:
     volumes:
       - ./pki:/pki
 
+  # Legacy Centrifugo
+  centrifugo-legacy:
+    image: centrifugo/centrifugo:v3.0.5
+    command:
+      - centrifugo
+      - --config
+      - /usr/local/etc/centrifugo.toml
+    environment:
+      # Following environment variables will be taken from env file
+      - CENTRIFUGO_ALLOWED_ORIGINS=${CENTRIFUGO_LEGACY_ALLOWED_ORIGINS}
+      - CENTRIFUGO_API_KEY
+    healthcheck:
+      test: wget --spider http://127.0.0.1:8000/health || exit 1
+    labels:
+      dozzle.enable: true
+    networks:
+      - private
+      - reverse-proxy
+    restart: unless-stopped
+    user: nobody:${STACK_GID}
+    volumes:
+      - ./centrifugo-legacy.toml:/usr/local/etc/centrifugo.toml:ro
+
+  # Legacy OPC-UA client service
+  opcua-bridge-legacy:
+    image: ghcr.io/cailloumajor/opcua-webhmi-bridge:1.0.6
+    environment:
+      - INFLUXDB_BASE_URL=http://influxdb:8086
+      - CENTRIFUGO_API_URL=http://centrifugo-legacy:8000/api
+      # Following environment variables will be obtained from `.env` file
+      - INFLUXDB_ORG
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET_LEGACY}
+      - INFLUXDB_WRITE_TOKEN=${INFLUXDB_OPCUA_BRIDGE_LEGACY_TOKEN}
+      - CENTRIFUGO_API_KEY
+      - OPC_SERVER_URL=${OPC_SERVER_URL_LEGACY}
+      - OPC_MONITOR_NODES=${OPC_MONITOR_NODES_LEGACY}
+      - OPC_RECORD_NODES=${OPC_RECORD_NODES_LEGACY}
+    group_add:
+      - ${STACK_GID}
+    labels:
+      dozzle.enable: "true"
+    networks:
+      - private
+    restart: unless-stopped
+    volumes:
+      - ./pki/legacy/cert.der:/tmp/certs/cert.der
+      - ./pki/legacy/key.pem:/tmp/certs/key.pem
+
+  # Legacy API service
+  api-service-legacy:
+    image: ghcr.io/cailloumajor/line-supervision-api-service:1.3.12
+    environment:
+      - TZ=Europe/Paris
+      - UI_CUSTOMIZATION_FILE=/app/config_data/customization.toml
+      - LOGO_FILE=/app/config_data/logo.png
+      - INFLUXDB_BASE_URL=http://influxdb:8086
+      # Following environment variables will be obtained from `.env` file
+      - INFLUXDB_ORG
+      - INFLUXDB_BUCKET=${INFLUXDB_BUCKET_LEGACY}
+      - INFLUXDB_READ_TOKEN=${INFLUXDB_API_SERVICE_LEGACY_TOKEN}
+    group_add:
+      - ${STACK_GID}
+    labels:
+      dozzle.enable: "true"
+    networks:
+      - private
+      - reverse-proxy
+    restart: unless-stopped
+    volumes:
+      - ./ui-customization.toml:/app/config_data/customization.toml:ro
+      - ./logo.png:/app/config_data/logo.png:ro
+
+  # Legacy line supervision frontend
+  line-supervision-frontend-legacy:
+    image: ghcr.io/cailloumajor/line-supervision-frontend:0.1.0
+    labels:
+      dozzle.enable: true
+    restart: unless-stopped
+    volumes:
+      - frontend-legacy-static:/srv/www
+
 networks:
   docker-api-log-viewer:
   telemetry:
@@ -266,3 +347,4 @@ volumes:
   caddy-data:
   factory-frontend-static:
   influxdb-config:
+  frontend-legacy-static:

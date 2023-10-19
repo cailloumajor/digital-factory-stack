@@ -1,0 +1,9 @@
+anonymous = true
+client_anonymous = true
+health = true
+proxy_subscribe_endpoint = "http://opcua-bridge-legacy:8008/centrifugo/subscribe"
+
+[[namespaces]]
+name = "proxied"
+anonymous = true
+proxy_subscribe = true

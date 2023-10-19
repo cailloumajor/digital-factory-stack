@@ -1,40 +1,60 @@
-{$SITE_ADDRESS}
-
-handle_path /centrifugo/* {
-	reverse_proxy centrifugo:8000
-}
-
-handle_path /compute-api/* {
-	reverse_proxy influxdb-compute-api:8080
-}
-
-handle_path /config-api/* {
-	reverse_proxy config-api:8080
-}
-
-rewrite /grafana /grafana/
-handle /grafana/* {
-	reverse_proxy grafana:3000
-}
-
-rewrite /logs /logs/
-handle /logs/* {
-	reverse_proxy log-viewer:8080
-}
-
-handle {
-	root * /srv/www
-	try_files {path} /
-	file_server {
-		precompressed gzip
+{$SITE_ADDRESS} {
+	handle_path /centrifugo/* {
+		reverse_proxy centrifugo:8000
 	}
 
-	# https://quasar.dev/quasar-cli-vite/developing-spa/deploying#important-hosting-configuration
-	@assets {
-		path *.jpg *.jpeg *.gif *.png *.svg *.webp *.js *.css *.eot *.otf *.ttf *.ttc *.woff *.woff2 *.font.css
+	handle_path /compute-api/* {
+		reverse_proxy influxdb-compute-api:8080
 	}
-	route {
-		header Cache-Control "no-cache,no-store,must-revalidate"
-		header @assets Cache-Control "max-age=604800"
+
+	handle_path /config-api/* {
+		reverse_proxy config-api:8080
+	}
+
+	rewrite /grafana /grafana/
+	handle /grafana/* {
+		reverse_proxy grafana:3000
+	}
+
+	rewrite /logs /logs/
+	handle /logs/* {
+		reverse_proxy log-viewer:8080
+	}
+
+	handle {
+		root * /srv/www
+		try_files {path} /
+		file_server {
+			precompressed gzip
+		}
+
+		# https://quasar.dev/quasar-cli-vite/developing-spa/deploying#important-hosting-configuration
+		@assets {
+			path *.jpg *.jpeg *.gif *.png *.svg *.webp *.js *.css *.eot *.otf *.ttf *.ttc *.woff *.woff2 *.font.css
+		}
+		route {
+			header Cache-Control "no-cache,no-store,must-revalidate"
+			header @assets Cache-Control "max-age=604800"
+		}
+	}
+}
+
+{$SITE_ADDRESS_LEGACY} {
+	handle_path /api/* {
+		reverse_proxy api-service-legacy:8080
+	}
+
+	handle_path /centrifugo/* {
+		reverse_proxy centrifugo-legacy:8000
+	}
+
+	handle {
+		root * /srv/www-legacy
+		file_server
+
+		@index {
+			path */
+		}
+		header @index Cache-Control "no-cache,no-store,must-revalidate"
 	}
 }
