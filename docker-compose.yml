@@ -238,7 +238,7 @@ services:
     restart: unless-stopped
 
   opcua-proxy:
-    image: ghcr.io/cailloumajor/opcua-proxy:6.0.0
+    image: ghcr.io/cailloumajor/opcua-proxy:6.0.1
     environment:
       - MONGODB_DATABASE=opcua
       - CONFIG_API_URL=http://config-api:8080/config/opcua
