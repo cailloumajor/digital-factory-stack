@@ -5,7 +5,7 @@ name: digital-factory-stack
 services:
 
   centrifugo:
-    image: centrifugo/centrifugo:v5.1.0
+    image: centrifugo/centrifugo:v5.4.6
     command:
       - centrifugo
       - --config
